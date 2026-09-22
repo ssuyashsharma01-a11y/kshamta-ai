@@ -1,0 +1,654 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kshamta AI — TalentOS Bharat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur px-6 py-3.5 flex flex-wrap justify-between items-center sticky top-0 z-50 gap-4">
+    <div class="flex items-center gap-3">
+      <div class="h-9 w-9 rounded-xl bg-sky-500 flex items-center justify-center font-black text-black text-xl shadow-lg shadow-sky-500/20">K</div>
+      <div>
+        <h1 class="text-lg font-bold tracking-wide flex items-center gap-2">
+          Kshamta AI <span class="text-sky-400 text-xs font-semibold px-2 py-0.5 rounded bg-sky-950 border border-sky-800/60">TalentOS Bharat</span>
+        </h1>
+        <p class="text-xs text-slate-400">Intelligent Workforce Evolution & Digital Twin Engine</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <div class="bg-slate-900 border border-slate-800 p-1 rounded-xl flex gap-1 text-xs font-semibold">
+        <button id="tabStudent" onclick="switchView('student')" class="px-3.5 py-1.5 rounded-lg bg-sky-500 text-black transition">
+          Student Digital Twin
+        </button>
+        <button id="tabDean" onclick="switchView('dean')" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+          Institutional Dean
+        </button>
+        <button id="tabRecruiter" onclick="switchView('recruiter')" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+          Recruiter Discovery
+        </button>
+      </div>
+      <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium flex items-center gap-1.5">
+        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> Live
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-6 space-y-6">
+
+    <!-- ==================== VIEW 1: STUDENT DIGITAL TWIN ==================== -->
+    <div id="studentView" class="space-y-6">
+      
+      <!-- Resume Upload & PDF Report Bar -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Upload Candidate Resume (PDF)</h4>
+            <p class="text-xs text-slate-400">Verifies claim vs. evidence footprints & audits DAG prerequisite enforcement.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <input type="file" id="resumeFileInput" accept=".pdf" class="text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-sky-400 hover:file:bg-slate-700 cursor-pointer">
+          <button onclick="uploadResume()" id="uploadBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-black font-bold text-xs rounded-xl transition">
+            Audit Resume
+          </button>
+          <button onclick="downloadCandidatePDF()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-500/30 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Download Audit PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Penalty Banner -->
+      <div id="penaltyBanner" class="hidden p-4 rounded-2xl bg-rose-950/40 border border-rose-800/60 flex items-start gap-3 text-rose-300">
+        <span class="p-1 rounded bg-rose-500/20 text-rose-400 font-bold text-xs">DAG PENALTY ENFORCED</span>
+        <div class="text-xs">
+          <p class="font-bold text-white">Prerequisite Deficit Flagged (Keyword Stuffing Detected)</p>
+          <p id="penaltyDetails" class="mt-0.5 text-rose-300">Penalties were applied to unsupported claims.</p>
+        </div>
+      </div>
+
+      <!-- Top Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <span class="text-xs text-slate-400 uppercase tracking-wider">Candidate Profile</span>
+          <h3 class="text-lg font-semibold mt-1">Suyash Sharma</h3>
+          <p class="text-xs text-sky-400 mt-0.5">Target: AI_Engineer</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <span class="text-xs text-slate-400 uppercase tracking-wider">Current Readiness</span>
+          <h3 class="text-2xl font-bold text-white mt-1" id="displayScore">65.0%</h3>
+          <p class="text-xs text-emerald-400 mt-0.5" id="penaltyStatus">DAG Prerequisite Audit: Verified</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <span class="text-xs text-slate-400 uppercase tracking-wider">Simulated Score</span>
+          <h3 class="text-2xl font-bold text-sky-400 mt-1" id="projectedScore">65.0%</h3>
+          <p class="text-xs text-emerald-400 mt-0.5" id="deltaJumpLabel">+0.0% Projected Gain</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <span class="text-xs text-slate-400 uppercase tracking-wider">Top Weighted Gap</span>
+          <h3 class="text-lg font-semibold text-rose-400 mt-1" id="topGapLabel">Docker / MLOps</h3>
+          <p class="text-xs text-slate-400 mt-0.5">High Impact on AI Pipeline</p>
+        </div>
+      </div>
+
+      <!-- Radar & Simulator -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <h2 class="font-bold text-base">Candidate Digital Twin Radar</h2>
+              <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">Benchmark: AI_Engineer</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">Cyan = Verified Candidate Vector; Gray = Industry Role Baseline</p>
+          </div>
+          <div class="relative h-[340px] flex items-center justify-center">
+            <canvas id="digitalTwinRadar"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <h2 class="font-bold text-base">What-If Career Simulator</h2>
+              <span class="text-xs text-sky-400 font-mono">Dynamic DAG</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">Toggle targeted skills to calculate projected readiness jump.</p>
+
+            <div class="space-y-3">
+              <label class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 rounded-xl cursor-pointer border border-slate-700/50 transition">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" value="Docker" onchange="runSimulation()" class="skill-checkbox h-4 w-4 rounded bg-slate-900 border-slate-700 text-sky-500">
+                  <span class="text-sm font-medium">Docker Containers</span>
+                </div>
+                <span class="text-xs text-emerald-400 font-semibold">+8.5% Gain</span>
+              </label>
+
+              <label class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 rounded-xl cursor-pointer border border-slate-700/50 transition">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" value="MLOps" onchange="runSimulation()" class="skill-checkbox h-4 w-4 rounded bg-slate-900 border-slate-700 text-sky-500">
+                  <span class="text-sm font-medium">MLOps & Tracking</span>
+                </div>
+                <span class="text-xs text-emerald-400 font-semibold">+9.8% Gain</span>
+              </label>
+
+              <label class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 rounded-xl cursor-pointer border border-slate-700/50 transition">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" value="Cloud/AWS" onchange="runSimulation()" class="skill-checkbox h-4 w-4 rounded bg-slate-900 border-slate-700 text-sky-500">
+                  <span class="text-sm font-medium">Cloud / AWS Deploy</span>
+                </div>
+                <span class="text-xs text-emerald-400 font-semibold">+7.2% Gain</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="mt-6 p-4 rounded-xl bg-sky-950/40 border border-sky-800/40">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-300">Projected Readiness Jump:</span>
+              <span class="font-bold text-sky-400" id="boxDeltaJump">0.0%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-2">
+              <div id="progressBar" class="bg-sky-400 h-full transition-all duration-500" style="width: 65%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prescriptive Course Recommendations -->
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="font-bold text-base text-white">Targeted Course & Curriculum Recommendations</h2>
+              <span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-mono">Live API</span>
+            </div>
+            <p class="text-xs text-slate-400">Algorithmic selection based on your specific DAG skill deficit vector</p>
+          </div>
+          <button onclick="fetchRecommendations()" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Refresh API Recommendations</span>
+          </button>
+        </div>
+
+        <div id="courseContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-slate-800/30 border border-slate-800 rounded-xl animate-pulse text-xs text-slate-500">Loading course recommendations...</div>
+        </div>
+      </div>
+
+      <!-- 30-Day Sprint -->
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h2 class="font-bold text-base text-slate-100">30-Day Prescriptive Action Sprint</h2>
+            <p class="text-xs text-slate-400">Targeting highest weighted deficits first</p>
+          </div>
+          <span class="px-2.5 py-1 bg-sky-500/10 text-sky-400 text-xs rounded-md border border-sky-500/20 font-medium">Personalized Plan</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-slate-800/40 border border-slate-800 rounded-xl">
+            <span class="text-xs text-sky-400 font-bold uppercase tracking-wider">Days 1 - 10</span>
+            <h4 class="text-sm font-semibold mt-1">Dockerize ML Pipelines</h4>
+            <p class="text-xs text-slate-400 mt-1">Containerize model scripts and create reproducible execution environments.</p>
+          </div>
+          <div class="p-4 bg-slate-800/40 border border-slate-800 rounded-xl">
+            <span class="text-xs text-sky-400 font-bold uppercase tracking-wider">Days 11 - 20</span>
+            <h4 class="text-sm font-semibold mt-1">MLOps Experiment Tracking</h4>
+            <p class="text-xs text-slate-400 mt-1">Integrate MLflow to log training metrics, artifacts, and model versions.</p>
+          </div>
+          <div class="p-4 bg-slate-800/40 border border-slate-800 rounded-xl">
+            <span class="text-xs text-sky-400 font-bold uppercase tracking-wider">Days 21 - 30</span>
+            <h4 class="text-sm font-semibold mt-1">Deploy on Cloud with CI/CD</h4>
+            <p class="text-xs text-slate-400 mt-1">Implement GitHub Actions to deploy FastAPI model serving to AWS.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 2: INSTITUTIONAL DEAN ==================== -->
+    <div id="deanView" class="space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="text-xs font-mono text-sky-400 uppercase tracking-wider">Institutional Dean Portal</span>
+          <h2 class="text-xl font-bold mt-0.5">Cohort Curriculum Drift & Deficit Audit</h2>
+          <p class="text-xs text-slate-400 mt-1">140 Students Analyzed • B.E. Computer Science (Batch 2026)</p>
+        </div>
+        <button onclick="downloadSyllabusPatch()" class="px-4 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-sky-500/20 transition flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Export 40-Hour Lab Syllabus Patch</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-slate-400 font-medium">Deficit #1</span>
+            <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">86% Cohort Gap</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">MLOps & Model Tracking</h4>
+          <p class="text-xs text-slate-400 mt-1">Syllabus lacks production serving and model monitoring pipelines.</p>
+        </div>
+        <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-slate-400 font-medium">Deficit #2</span>
+            <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">78% Cohort Gap</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">Docker & Containers</h4>
+          <p class="text-xs text-slate-400 mt-1">Students lack container runtime knowledge for industry microservices.</p>
+        </div>
+        <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-slate-400 font-medium">Intervention Ready</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">2 Credits Ready</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">NEP 2020 Aligned</h4>
+          <p class="text-xs text-slate-400 mt-1">40-hour modular sprint ready for Board of Studies signoff.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+        <h3 class="font-bold text-base text-white mb-2">Batch Competency Heatmap Matrix</h3>
+        <p class="text-xs text-slate-400 mb-4">Green (&ge;70%) = Ready • Amber (40-69%) = Foundational • Red (&lt;40%) = Vulnerable Deficit</p>
+        <div class="overflow-x-auto max-h-[400px] rounded-xl border border-slate-800">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800/80 uppercase text-[10px] font-bold text-slate-400 sticky top-0 backdrop-blur z-10">
+              <tr>
+                <th class="p-3">Student UID</th>
+                <th class="p-3 text-center">Python & DSA</th>
+                <th class="p-3 text-center">ML & Deep Learning</th>
+                <th class="p-3 text-center">FastAPI / APIs</th>
+                <th class="p-3 text-center">Docker & Containers</th>
+                <th class="p-3 text-center">MLOps & Tracking</th>
+                <th class="p-3 text-center">Cloud / AWS</th>
+                <th class="p-3 text-center">Batch Index</th>
+              </tr>
+            </thead>
+            <tbody id="heatmapTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 3: RECRUITER DISCOVERY ==================== -->
+    <div id="recruiterView" class="space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="text-xs font-mono text-sky-400 uppercase tracking-wider">Recruiter Visibility Engine</span>
+          <h2 class="text-xl font-bold mt-0.5">Zero-Keyword Verified Talent Discovery</h2>
+          <p class="text-xs text-slate-400 mt-1">Ranked by Graph Capability Vectors & Evidence Proof (Keyword Stuffing Penalized)</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-400">Target Role:</span>
+          <select class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-white font-semibold">
+            <option>AI Engineer</option>
+            <option>Backend Developer</option>
+            <option>MLOps Specialist</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800/80 uppercase text-[10px] font-bold text-slate-400">
+              <tr>
+                <th class="p-3.5">Candidate Name</th>
+                <th class="p-3.5">Target Role</th>
+                <th class="p-3.5 text-center">True Capability Score</th>
+                <th class="p-3.5">Evidence Density</th>
+                <th class="p-3.5">Verified Core Stack</th>
+                <th class="p-3.5 text-center">Graph Audit Status</th>
+              </tr>
+            </thead>
+            <tbody id="recruiterTableBody" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const labels = ["Python", "Machine Learning", "Deep Learning", "PyTorch", "FastAPI", "Docker", "MLOps", "Cloud/AWS"];
+    const benchmarks = [100, 95, 85, 80, 75, 70, 65, 60];
+    let currentSkills = {
+      "Python": 0.85,
+      "Machine Learning": 0.80,
+      "Deep Learning": 0.65,
+      "PyTorch": 0.60,
+      "FastAPI": 0.75,
+      "Docker": 0.20,
+      "MLOps": 0.15,
+      "Cloud/AWS": 0.20
+    };
+
+    let radarChart;
+
+    function initRadar() {
+      const ctx = document.getElementById('digitalTwinRadar').getContext('2d');
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Candidate Competency',
+              data: labels.map(l => (currentSkills[l] || 0) * 100),
+              backgroundColor: 'rgba(56, 189, 248, 0.25)',
+              borderColor: '#38bdf8',
+              borderWidth: 2,
+              pointBackgroundColor: '#38bdf8'
+            },
+            {
+              label: 'Role Target Benchmark',
+              data: benchmarks,
+              backgroundColor: 'rgba(148, 163, 184, 0.1)',
+              borderColor: '#64748b',
+              borderWidth: 1.5,
+              borderDash: [5, 5],
+              pointBackgroundColor: '#94a3b8'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { display: false },
+              grid: { color: 'rgba(51, 65, 85, 0.6)' },
+              angleLines: { color: 'rgba(51, 65, 85, 0.6)' },
+              pointLabels: { color: '#cbd5e1', font: { size: 11, weight: 'bold' } }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#cbd5e1', font: { size: 11 } },
+              position: 'bottom'
+            }
+          }
+        }
+      });
+      fetchRecommendations();
+    }
+
+    async function fetchRecommendations() {
+      const container = document.getElementById('courseContainer');
+      try {
+        const response = await fetch('/api/candidate/recommended-courses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skills: currentSkills, target_role: 'AI_Engineer' })
+        });
+        const data = await response.json();
+        
+        container.innerHTML = '';
+        data.recommendations.forEach(course => {
+          const card = document.createElement('div');
+          card.className = "p-4 bg-slate-800/40 border border-slate-800 hover:border-slate-700 rounded-xl flex flex-col justify-between transition";
+          card.innerHTML = `
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold">Deficit: ${course.skill_target} (${course.current_proficiency})</span>
+                <span class="text-[10px] text-emerald-400 font-semibold">${course.roi_gain}</span>
+              </div>
+              <h4 class="text-sm font-bold text-white mt-1 leading-snug">${course.course_title}</h4>
+              <p class="text-[11px] text-sky-400 mt-0.5 font-medium">${course.provider} • ${course.duration}</p>
+              
+              <div class="mt-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hands-On Capstone:</span>
+                <p class="text-xs text-slate-300 mt-0.5 italic">"${course.curated_project}"</p>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium">Difficulty: ${course.difficulty}</span>
+              <a href="${course.url}" target="_blank" class="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-lg text-[11px] font-semibold transition">
+                Start Module &rarr;
+              </a>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Course fetch failed', err);
+      }
+    }
+
+    async function runSimulation() {
+      const checkedBoxes = Array.from(document.querySelectorAll('.skill-checkbox:checked')).map(cb => cb.value);
+      
+      const payload = {
+        current_skills: currentSkills,
+        target_role: "AI_Engineer",
+        new_skills: checkedBoxes
+      };
+
+      try {
+        const response = await fetch("/api/simulator/what-if", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+
+        document.getElementById('projectedScore').innerText = data.projected_score + "%";
+        document.getElementById('deltaJumpLabel').innerText = "+" + data.delta_jump + "% Projected Gain";
+        document.getElementById('boxDeltaJump').innerText = "+" + data.delta_jump + "%";
+        document.getElementById('progressBar').style.width = data.projected_score + "%";
+
+        const updatedData = labels.map(l => {
+          if (checkedBoxes.includes(l)) return 85;
+          return (currentSkills[l] || 0) * 100;
+        });
+
+        radarChart.data.datasets[0].data = updatedData;
+        radarChart.update();
+      } catch (err) {
+        console.error("Simulation error", err);
+      }
+    }
+
+    async function uploadResume() {
+      const fileInput = document.getElementById('resumeFileInput');
+      if (!fileInput.files.length) {
+        alert('Please select a PDF resume file first.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('target_role', 'AI_Engineer');
+
+      const btn = document.getElementById('uploadBtn');
+      btn.innerText = 'Analyzing...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('/api/candidate/analyze-resume', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        currentSkills = data.skills;
+        const score = data.readiness_score;
+
+        document.getElementById('displayScore').innerText = score + '%';
+        document.getElementById('projectedScore').innerText = score + '%';
+        document.getElementById('progressBar').style.width = score + '%';
+
+        const banner = document.getElementById('penaltyBanner');
+        const penaltyStatus = document.getElementById('penaltyStatus');
+        if (data.penalty_detected) {
+          banner.classList.remove('hidden');
+          document.getElementById('penaltyDetails').innerText = "Flagged Violations: " + data.penalties.join(", ");
+          penaltyStatus.innerText = "DAG Penalty Enforced";
+          penaltyStatus.className = "text-xs text-rose-400 mt-0.5 font-bold";
+        } else {
+          banner.classList.add('hidden');
+          penaltyStatus.innerText = "DAG Prerequisite Audit: Verified";
+          penaltyStatus.className = "text-xs text-emerald-400 mt-0.5 font-medium";
+        }
+
+        radarChart.data.datasets[0].data = labels.map(l => (currentSkills[l] || 0) * 100);
+        radarChart.update();
+        fetchRecommendations();
+
+      } catch (err) {
+        console.error('Resume upload failed', err);
+      } finally {
+        btn.innerText = 'Audit Resume';
+        btn.disabled = false;
+      }
+    }
+
+    async function downloadCandidatePDF() {
+      const payload = {
+        candidate_name: "Suyash Sharma",
+        target_role: "AI_Engineer",
+        readiness_score: parseFloat(document.getElementById('displayScore').innerText),
+        penalty_status: document.getElementById('penaltyStatus').innerText,
+        skills: currentSkills
+      };
+
+      try {
+        const res = await fetch('/api/candidate/export-report-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "Candidate_Digital_Twin_Audit.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (err) {
+        console.error('PDF export failed', err);
+      }
+    }
+
+    function switchView(view) {
+      const tabs = {
+        student: document.getElementById('tabStudent'),
+        dean: document.getElementById('tabDean'),
+        recruiter: document.getElementById('tabRecruiter')
+      };
+      const views = {
+        student: document.getElementById('studentView'),
+        dean: document.getElementById('deanView'),
+        recruiter: document.getElementById('recruiterView')
+      };
+
+      Object.keys(tabs).forEach(k => {
+        if (k === view) {
+          tabs[k].className = "px-3.5 py-1.5 rounded-lg bg-sky-500 text-black font-semibold transition";
+          views[k].classList.remove('hidden');
+        } else {
+          tabs[k].className = "px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white font-semibold transition";
+          views[k].classList.add('hidden');
+        }
+      });
+
+      if (view === 'dean') loadCohortHeatmap();
+      if (view === 'recruiter') loadRecruiterPool();
+    }
+
+    let cohortLoaded = false;
+    async function loadCohortHeatmap() {
+      if (cohortLoaded) return;
+      try {
+        const res = await fetch('/api/university/cohort-metrics');
+        const data = await res.json();
+        const tbody = document.getElementById('heatmapTableBody');
+        tbody.innerHTML = '';
+
+        const getBadge = (val) => {
+          if (val >= 70) return `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">${val}%</span>`;
+          if (val >= 40) return `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">${val}%</span>`;
+          return `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">${val}%</span>`;
+        };
+
+        data.students.forEach((s) => {
+          const vals = Object.values(s.scores);
+          const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition";
+          row.innerHTML = `
+            <td class="p-3 text-slate-200 font-bold">${s.uid}</td>
+            <td class="p-3 text-center">${getBadge(s.scores["Python & DSA"])}</td>
+            <td class="p-3 text-center">${getBadge(s.scores["ML & Deep Learning"])}</td>
+            <td class="p-3 text-center">${getBadge(s.scores["FastAPI / APIs"])}</td>
+            <td class="p-3 text-center">${getBadge(s.scores["Docker & Containers"])}</td>
+            <td class="p-3 text-center">${getBadge(s.scores["MLOps & Tracking"])}</td>
+            <td class="p-3 text-center">${getBadge(s.scores["Cloud / AWS"])}</td>
+            <td class="p-3 text-center font-bold ${avg >= 60 ? 'text-emerald-400' : 'text-rose-400'}">${avg}%</td>
+          `;
+          tbody.appendChild(row);
+        });
+        cohortLoaded = true;
+      } catch (err) {
+        console.error('Cohort heatmap failed', err);
+      }
+    }
+
+    let recruiterLoaded = false;
+    async function loadRecruiterPool() {
+      if (recruiterLoaded) return;
+      try {
+        const res = await fetch('/api/recruiter/talent-pool');
+        const list = await res.json();
+        const tbody = document.getElementById('recruiterTableBody');
+        tbody.innerHTML = '';
+
+        list.forEach(c => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition";
+          row.innerHTML = `
+            <td class="p-3.5 font-bold text-white">${c.name} <span class="text-[10px] text-slate-500 font-mono block">${c.uid}</span></td>
+            <td class="p-3.5 text-slate-300">${c.role}</td>
+            <td class="p-3.5 text-center font-black text-sm ${c.capability_score >= 60 ? 'text-sky-400' : 'text-rose-400'}">${c.capability_score}%</td>
+            <td class="p-3.5 text-slate-400 text-xs">${c.evidence_density}</td>
+            <td class="p-3.5">
+              <div class="flex flex-wrap gap-1">
+                ${c.core_stack.map(s => `<span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-300">${s}</span>`).join('')}
+              </div>
+            </td>
+            <td class="p-3.5 text-center">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${c.status_badge}">${c.verification_status}</span>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+        recruiterLoaded = true;
+      } catch (err) {
+        console.error('Recruiter pool load failed', err);
+      }
+    }
+
+    function downloadSyllabusPatch() {
+      const link = document.createElement('a');
+      link.href = '/api/university/export-syllabus-patch';
+      link.download = '40hr_curriculum_drift_patch.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    window.addEventListener('DOMContentLoaded', initRadar);
+  </script>
+</body>
+</html>

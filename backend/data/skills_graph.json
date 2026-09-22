@@ -1,0 +1,20 @@
+{
+  "skills": {
+    "Python": { "category": "Core", "prerequisites": [] },
+    "C++": { "category": "Core", "prerequisites": [] },
+    "Data Structures": { "category": "Core", "prerequisites": ["Python", "C++"] },
+    "Algorithms": { "category": "Core", "prerequisites": ["Data Structures"] },
+    "SQL": { "category": "Database", "prerequisites": [] },
+    "Database Management Systems": { "category": "Database", "prerequisites": ["SQL"] },
+    "FastAPI": { "category": "Backend", "prerequisites": ["Python"] },
+    "REST APIs": { "category": "Backend", "prerequisites": ["Python"] },
+    "Linux": { "category": "DevOps", "prerequisites": [] },
+    "Docker": { "category": "DevOps", "prerequisites": ["Linux"] },
+    "Cloud/AWS": { "category": "DevOps", "prerequisites": ["Linux", "Docker"] },
+    "Machine Learning": { "category": "AI/ML", "prerequisites": ["Python"] },
+    "Deep Learning": { "category": "AI/ML", "prerequisites": ["Machine Learning"] },
+    "PyTorch": { "category": "AI/ML", "prerequisites": ["Deep Learning"] },
+    "TensorFlow": { "category": "AI/ML", "prerequisites": ["Deep Learning"] },
+    "MLOps": { "category": "DevOps", "prerequisites": ["Machine Learning", "Docker", "Cloud/AWS"] }
+  }
+}

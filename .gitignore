@@ -1,0 +1,7 @@
+﻿venv/
+__pycache__/
+*.pyc
+.env
+talentos_real.db
+build_assets.py
+update.py
