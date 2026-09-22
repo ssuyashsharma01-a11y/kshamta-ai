@@ -1,41 +1,42 @@
 {
   "AI_Engineer": {
-    "title": "Artificial Intelligence & ML Engineer",
-    "description": "Production-grade ML systems deployment and model training",
-    "required_skills": {
-      "Python": 1.0,
-      "Machine Learning": 0.95,
-      "Deep Learning": 0.85,
-      "PyTorch": 0.80,
-      "FastAPI": 0.75,
-      "Docker": 0.70,
-      "MLOps": 0.65,
-      "Cloud/AWS": 0.60
-    }
+    "Python": 1.0,
+    "Machine Learning": 0.95,
+    "Deep Learning": 0.85,
+    "PyTorch": 0.8,
+    "FastAPI": 0.75,
+    "Docker": 0.7,
+    "MLOps": 0.65,
+    "Cloud/AWS": 0.6
   },
   "Backend_Engineer": {
-    "title": "Backend Systems Developer",
-    "description": "Scalable REST APIs, databases, and microservices architecture",
-    "required_skills": {
-      "Python": 1.0,
-      "FastAPI": 0.95,
-      "SQL": 0.90,
-      "Data Structures": 0.85,
-      "Docker": 0.80,
-      "REST APIs": 0.85,
-      "Cloud/AWS": 0.65
-    }
+    "Python": 0.95,
+    "FastAPI": 0.95,
+    "Docker": 0.85,
+    "Cloud/AWS": 0.8,
+    "Machine Learning": 0.3,
+    "Deep Learning": 0.2,
+    "PyTorch": 0.2,
+    "MLOps": 0.4
   },
-  "Data_Scientist": {
-    "title": "Data Scientist / Predictive Analyst",
-    "description": "Statistical modeling, business intelligence, and ML pipelines",
-    "required_skills": {
-      "Python": 1.0,
-      "SQL": 0.90,
-      "Machine Learning": 0.90,
-      "Data Structures": 0.70,
-      "Deep Learning": 0.65,
-      "Cloud/AWS": 0.50
-    }
+  "MLOps_Engineer": {
+    "Docker": 0.95,
+    "MLOps": 0.95,
+    "Cloud/AWS": 0.9,
+    "Python": 0.85,
+    "FastAPI": 0.8,
+    "Machine Learning": 0.75,
+    "Deep Learning": 0.6,
+    "PyTorch": 0.5
+  },
+  "Data_Engineer": {
+    "Python": 0.9,
+    "Docker": 0.8,
+    "Cloud/AWS": 0.85,
+    "FastAPI": 0.6,
+    "Machine Learning": 0.5,
+    "MLOps": 0.6,
+    "Deep Learning": 0.3,
+    "PyTorch": 0.2
   }
 }

@@ -81,7 +81,15 @@
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
           <span class="text-xs text-slate-400 uppercase tracking-wider">Candidate Profile</span>
           <h3 class="text-lg font-semibold mt-1">Suyash Sharma</h3>
-          <p class="text-xs text-sky-400 mt-0.5">Target: AI_Engineer</p>
+          <div class="mt-1 flex items-center gap-1.5">
+            <span class="text-[10px] text-slate-400 uppercase font-mono">Role:</span>
+            <select id="targetRoleSelect" onchange="switchTargetRole()" class="bg-slate-800 border border-slate-700 text-sky-400 text-xs rounded-lg px-2 py-0.5 font-bold cursor-pointer outline-none">
+              <option value="AI_Engineer" selected>AI Engineer</option>
+              <option value="Backend_Engineer">Backend Engineer</option>
+              <option value="MLOps_Engineer">MLOps Specialist</option>
+              <option value="Data_Engineer">Data Engineer</option>
+            </select>
+          </div>
         </div>
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
           <span class="text-xs text-slate-400 uppercase tracking-wider">Current Readiness</span>
@@ -287,7 +295,7 @@
         </div>
         <div class="flex items-center gap-3">
           <span class="text-xs text-slate-400">Target Role:</span>
-          <select class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-white font-semibold">
+          <select id="recruiterRoleSelect" onchange="loadRecruiterPool(true)" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-white font-semibold outline-none cursor-pointer">
             <option>AI Engineer</option>
             <option>Backend Developer</option>
             <option>MLOps Specialist</option>
@@ -319,6 +327,45 @@
   <script>
     const labels = ["Python", "Machine Learning", "Deep Learning", "PyTorch", "FastAPI", "Docker", "MLOps", "Cloud/AWS"];
     const benchmarks = [100, 95, 85, 80, 75, 70, 65, 60];
+    
+    let currentRole = 'AI_Engineer';
+    const roleBenchmarks = {
+      'AI_Engineer': [100, 95, 85, 80, 75, 70, 65, 60],
+      'Backend_Engineer': [95, 30, 20, 20, 95, 85, 40, 80],
+      'MLOps_Engineer': [85, 75, 60, 50, 80, 95, 95, 90],
+      'Data_Engineer': [90, 50, 30, 20, 60, 80, 60, 85]
+    };
+
+    async function switchTargetRole() {
+      currentRole = document.getElementById('targetRoleSelect').value;
+      if (typeof radarChart !== 'undefined' && roleBenchmarks[currentRole]) {
+        radarChart.data.datasets[1].data = roleBenchmarks[currentRole];
+        radarChart.update();
+      }
+
+      const checkedBoxes = Array.from(document.querySelectorAll('.skill-checkbox:checked')).map(cb => cb.value);
+      try {
+        const res = await fetch('/api/simulator/what-if', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            current_skills: currentSkills,
+            target_role: currentRole,
+            new_skills: checkedBoxes
+          })
+        });
+        const data = await res.json();
+        document.getElementById('displayScore').innerText = data.current_score + '%';
+        document.getElementById('projectedScore').innerText = data.projected_score + '%';
+        document.getElementById('progressBar').style.width = data.projected_score + '%';
+        document.getElementById('deltaJumpLabel').innerText = '+' + data.delta_jump + '% Projected Gain';
+        document.getElementById('boxDeltaJump').innerText = '+' + data.delta_jump + '%';
+      } catch (e) {
+        console.error('Role switch simulation failed', e);
+      }
+      fetchRecommendations();
+    }
+
     let currentSkills = {
       "Python": 0.85,
       "Machine Learning": 0.80,
@@ -388,7 +435,7 @@
         const response = await fetch('/api/candidate/recommended-courses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ skills: currentSkills, target_role: 'AI_Engineer' })
+          body: JSON.stringify({ skills: currentSkills, target_role: currentRole })
         });
         const data = await response.json();
         
@@ -606,38 +653,40 @@
     }
 
     let recruiterLoaded = false;
-    async function loadRecruiterPool() {
-      if (recruiterLoaded) return;
-      try {
-        const res = await fetch('/api/recruiter/talent-pool');
-        const list = await res.json();
-        const tbody = document.getElementById('recruiterTableBody');
-        tbody.innerHTML = '';
+    async function loadRecruiterPool(force = false) {
+        if (recruiterLoaded && !force) return;
+        try {
+          const roleSelect = document.getElementById('recruiterRoleSelect');
+          const selectedRole = roleSelect ? roleSelect.value : 'AI Engineer';
+          const res = await fetch(`/api/recruiter/talent-pool?role=${encodeURIComponent(selectedRole)}`);
+          const list = await res.json();
+          const tbody = document.getElementById('recruiterTableBody');
+          tbody.innerHTML = '';
 
-        list.forEach(c => {
-          const row = document.createElement('tr');
-          row.className = "hover:bg-slate-800/40 transition";
-          row.innerHTML = `
-            <td class="p-3.5 font-bold text-white">${c.name} <span class="text-[10px] text-slate-500 font-mono block">${c.uid}</span></td>
-            <td class="p-3.5 text-slate-300">${c.role}</td>
-            <td class="p-3.5 text-center font-black text-sm ${c.capability_score >= 60 ? 'text-sky-400' : 'text-rose-400'}">${c.capability_score}%</td>
-            <td class="p-3.5 text-slate-400 text-xs">${c.evidence_density}</td>
-            <td class="p-3.5">
-              <div class="flex flex-wrap gap-1">
-                ${c.core_stack.map(s => `<span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-300">${s}</span>`).join('')}
-              </div>
-            </td>
-            <td class="p-3.5 text-center">
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${c.status_badge}">${c.verification_status}</span>
-            </td>
-          `;
-          tbody.appendChild(row);
-        });
-        recruiterLoaded = true;
-      } catch (err) {
-        console.error('Recruiter pool load failed', err);
+          list.forEach(c => {
+            const row = document.createElement('tr');
+            row.className = "hover:bg-slate-800/40 transition";
+            row.innerHTML = `
+              <td class="p-3.5 font-bold text-white">${c.name} <span class="text-[10px] text-slate-500 font-mono block">${c.uid}</span></td>
+              <td class="p-3.5 text-slate-300 font-semibold">${c.role}</td>
+              <td class="p-3.5 text-center font-black text-sm ${c.capability_score >= 60 ? 'text-sky-400' : 'text-rose-400'}">${c.capability_score}%</td>
+              <td class="p-3.5 text-slate-400 text-xs">${c.evidence_density}</td>
+              <td class="p-3.5">
+                <div class="flex flex-wrap gap-1">
+                  ${c.core_stack.map(s => `<span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-300">${s}</span>`).join('')}
+                </div>
+              </td>
+              <td class="p-3.5 text-center">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${c.status_badge}">${c.verification_status}</span>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+          recruiterLoaded = true;
+        } catch (err) {
+          console.error('Recruiter pool load failed', err);
+        }
       }
-    }
 
     function downloadSyllabusPatch() {
       const link = document.createElement('a');
