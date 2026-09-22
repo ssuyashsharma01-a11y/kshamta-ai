@@ -1,4 +1,10 @@
-﻿from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from backend.github_scanner import GitHubEvidenceScanner
+from backend.scoring import MathematicalScoringEngine
+
+scanner = GitHubEvidenceScanner()
+scoring_engine = MathematicalScoringEngine()
+
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
@@ -105,7 +111,7 @@ def serve_dashboard():
     return FileResponse(os.path.join(frontend_path, "index.html"))
 
 @app.post("/api/candidate/analyze-resume")
-async def analyze_resume(file: UploadFile = File(...), target_role: str = Form("AI_Engineer")):
+async def analyze_resume(file: UploadFile = File(...), target_role: str = Form("AI_Engineer"), github_url: str = Form(None)):
     content = await file.read()
     raw_text = evidence.parse_pdf_bytes(content)
     detected_skills = evidence.analyze_profile(raw_text)
