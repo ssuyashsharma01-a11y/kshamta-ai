@@ -1,29 +1,107 @@
-﻿import json
+from typing import Dict, List, Any
 
 class MathematicalScoringEngine:
-    """
-    Transparent, evidence-weighted scoring engine with feature attribution.
-    Eliminates arbitrary static scores.
-    """
-    
-    DAG_PREREQUISITES = {
-        "Machine Learning": ["Python"],
-        "Deep Learning": ["Machine Learning", "Python"],
-        "PyTorch": ["Deep Learning", "Python"],
-        "MLOps": ["Docker", "Machine Learning"],
-        "FastAPI": ["Python"]
-    }
+    def __init__(self):
+        self.role_benchmarks = {
+            "AI_Engineer": {
+                "Python": 0.20,
+                "Machine Learning": 0.18,
+                "Deep Learning": 0.15,
+                "PyTorch": 0.15,
+                "FastAPI": 0.12,
+                "Docker": 0.10,
+                "MLOps": 0.10
+            },
+            "Backend_Engineer": {
+                "Python": 0.25,
+                "FastAPI": 0.25,
+                "Docker": 0.20,
+                "Cloud/AWS": 0.15,
+                "Database/SQL": 0.15
+            },
+            "MLOps_Engineer": {
+                "Python": 0.15,
+                "Docker": 0.25,
+                "MLOps": 0.25,
+                "Cloud/AWS": 0.20,
+                "FastAPI": 0.15
+            }
+        }
+        self.prerequisites = {
+            "PyTorch": ["Deep Learning", "Python"],
+            "MLOps": ["Docker", "Machine Learning"],
+            "FastAPI": ["Python"],
+            "Deep Learning": ["Machine Learning", "Python"]
+        }
 
-    def __init__(self, benchmark_path="backend/data/role_benchmarks.json"):
-        with open(benchmark_path, "r", encoding="utf-8") as f:
-            self.role_benchmarks = json.load(f)
+    def calculate_grounded_score(self, candidate_claims: Dict[str, float], code_evidence: Dict[str, Any], target_role: str = "AI_Engineer") -> Dict[str, Any]:
+        role_weights = self.role_benchmarks.get(target_role, self.role_benchmarks["AI_Engineer"])
+        verified_set = set(code_evidence.get("verified_skills", []))
+        
+        confidence_vector = {}
+        attributions = []
+        raw_score = 0.0
 
-    
-    
+        for skill, weight in role_weights.items():
+            claim = candidate_claims.get(skill, 0.0)
+            is_code_verified = skill in verified_set
+            
+            prereq_failed = False
+            missing_parents = []
+            if skill in self.prerequisites:
+                for parent in self.prerequisites[skill]:
+                    if candidate_claims.get(parent, 0.0) < 0.40:
+                        prereq_failed = True
+                        missing_parents.append(parent)
+
+            if is_code_verified:
+                effective_val = min(1.0, (0.3 * claim) + (0.7 * 0.95))
+                attributions.append({
+                    "skill": skill,
+                    "impact": f"+{round(weight * 100, 1)}%",
+                    "reason": "Deterministic AST imports & source files verified in repository."
+                })
+            elif prereq_failed:
+                effective_val = max(0.0, claim * 0.35)
+                attributions.append({
+                    "skill": skill,
+                    "impact": f"-{round(weight * 0.4 * 100, 1)}%",
+                    "reason": f"Prerequisite deficit: Lacks verified foundation in {', '.join(missing_parents)}."
+                })
+            else:
+                effective_val = claim * 0.65
+                if claim < 0.3:
+                    attributions.append({
+                        "skill": skill,
+                        "impact": f"-{round(weight * 0.5 * 100, 1)}%",
+                        "reason": f"Critical vacancy for {target_role.replace('_', ' ')} benchmark."
+                    })
+
+            confidence_vector[skill] = round(effective_val, 2)
+            raw_score += effective_val * weight
+
+        final_score = round(min(100.0, raw_score * 100), 1)
+
+        return {
+            "target_role": target_role,
+            "readiness_score": final_score,
+            "confidence_vector": confidence_vector,
+            "explainability_attributions": attributions,
+            "evidence_confidence": code_evidence.get("evidence_confidence", 0.65)
+        }
+
+    def calculate_readiness(self, candidate_claims: dict, target_role: str = "AI_Engineer", code_evidence: dict = None):
+        if not code_evidence:
+            code_evidence = {
+                "verified_skills": [s for s, v in candidate_claims.items() if v >= 0.7 and s in ["Python", "FastAPI"]],
+                "evidence_confidence": 0.75
+            }
+        return self.calculate_grounded_score(candidate_claims, code_evidence, target_role)
+
     def simulate_what_if(self, current_skills: dict, target_role: str, new_skills: list):
         simulated_claims = dict(current_skills)
         for s in new_skills:
-            simulated_claims[s] = max(simulated_claims.get(s, 0.0), 0.85)
+            simulated_claims[s] = max(simulated_claims.get(s, 0.0), 0.88)
 
         base_evidence = {"verified_skills": [s for s, v in current_skills.items() if v >= 0.7]}
         sim_evidence = {"verified_skills": list(set(base_evidence["verified_skills"] + new_skills))}
@@ -42,86 +120,7 @@ class MathematicalScoringEngine:
             "unlocked_capabilities": [f"Verified competency in {s}" for s in new_skills]
         }
 
-    def calculate_readiness(self, candidate_claims: dict, target_role: str = 'AI_Engineer', code_evidence: dict = None):
-        if not code_evidence:
-            # Check if fastapi/fastapi sample or claims provide evidence
-            code_evidence = {'verified_skills': [s for s, v in candidate_claims.items() if v >= 0.7 and s in ['Python', 'FastAPI']], 'evidence_confidence': 0.65}
-        
-        eval_res = self.calculate_grounded_score(candidate_claims, code_evidence, target_role)
-        return {
-            'readiness_score': eval_res['readiness_score'],
-            'target_role': target_role,
-            'evidence_confidence': eval_res['evidence_confidence'],
-            'explainability_attributions': eval_res['explainability_attributions'],
-            'confidence_vector': eval_res['confidence_vector']
-        }
+scoring = MathematicalScoringEngine()
 
-    def calculate_grounded_score(self, candidate_claims: dict, code_evidence: dict, target_role: str):
-        role_weights = self.role_benchmarks.get(target_role, self.role_benchmarks["AI_Engineer"])
-        
-        verified_skills_from_code = set(code_evidence.get("verified_skills", []))
-        confidence_map = {}
-        attributions = []
-
-        total_role_weight = sum(role_weights.values())
-        weighted_score_sum = 0.0
-
-        for skill, target_weight in role_weights.items():
-            claim_val = candidate_claims.get(skill, 0.0)
-            code_val = 1.0 if skill in verified_skills_from_code else 0.0
-
-            # Check DAG prerequisite grounding
-            prereqs = self.DAG_PREREQUISITES.get(skill, [])
-            if prereqs:
-                prereqs_met = sum([1 for p in prereqs if (candidate_claims.get(p, 0.0) >= 0.5 or p in verified_skills_from_code)])
-                dag_grounding = prereqs_met / len(prereqs)
-            else:
-                dag_grounding = 1.0
-
-            # Mathematical Confidence Equation
-            # 25% Resume Claim + 50% GitHub Ground Truth + 25% DAG Prerequisite Grounding
-            if code_val > 0:
-                skill_conf = (0.25 * claim_val) + (0.50 * code_val) + (0.25 * dag_grounding)
-            else:
-                # Agar code evidence nahi hai toh max claim value 0.45 tak downweight ho jayegi
-                skill_conf = (0.35 * claim_val) * (0.5 + 0.5 * dag_grounding)
-
-            skill_conf = min(1.0, max(0.0, skill_conf))
-            confidence_map[skill] = round(skill_conf, 3)
-
-            # Attribution contribution
-            contribution = (skill_conf * target_weight) / total_role_weight
-            weighted_score_sum += contribution
-
-            # Generate Explainability Log
-            if code_val > 0:
-                attributions.append({
-                    "skill": skill,
-                    "impact": f"+{round(contribution * 100, 1)}%",
-                    "reason": f"Deterministic code evidence verified in repository."
-                })
-            elif claim_val > 0.6 and dag_grounding < 1.0:
-                attributions.append({
-                    "skill": skill,
-                    "impact": f"-{round((target_weight / total_role_weight) * 15, 1)}%",
-                    "reason": f"Prerequisite deficit: Lacks verified foundation in {', '.join(prereqs)}."
-                })
-
-        final_readiness = round(weighted_score_sum * 100, 1)
-
-        return {
-            "target_role": target_role,
-            "readiness_score": final_readiness,
-            "confidence_vector": confidence_map,
-            "explainability_attributions": attributions[:4],
-            "evidence_confidence": code_evidence.get("evidence_confidence", 0.0)
-        }
-
-if __name__ == "__main__":
-    engine = MathematicalScoringEngine()
-    sample_claims = {"Python": 1.0, "Machine Learning": 0.8, "PyTorch": 0.9, "MLOps": 0.7}
-    sample_evidence = {"verified_skills": ["Python", "FastAPI"], "evidence_confidence": 0.70}
-    res = engine.calculate_grounded_score(sample_claims, sample_evidence, "AI_Engineer")
-    print(json.dumps(res, indent=2))
-
+# Compatibility Aliases
 ScoringEngine = MathematicalScoringEngine

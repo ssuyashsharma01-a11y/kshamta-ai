@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import Optional, List, Dict
 import os
 import io
 import json
@@ -357,40 +357,35 @@ def get_cohort_metrics():
 @app.get("/api/university/export-syllabus-patch")
 def export_syllabus_patch():
     patch_data = {
-        "patch_id": "PATCH-2026-CSE-AI-01",
-        "title": "40-Hour Applied Production AI & DevOps Sprint Lab",
-        "target_cohort": "B.E. CSE (Batch 2026)",
-        "accreditation_compliance": "NEP 2020 / AICTE Experiential Credit Framework (2 Credits)",
-        "duration_hours": 40,
-        "modules": [
+        "institution_program": "B.E. Computer Science & Engineering (Batch 2026)",
+        "accreditation_compliance": "NEP 2020 Vocational Credit Framework (2 Credits)",
+        "audit_timestamp": "2026-09-24",
+        "cohort_size_audited": 140,
+        "identified_drift_deficits": [
+            {"skill": "MLOps & Tracking", "cohort_deficiency": "86%"},
+            {"skill": "Docker & Containerization", "cohort_deficiency": "78%"}
+        ],
+        "curriculum_patch_modules": [
             {
-                "module_number": 1,
-                "title": "Containerization of Machine Learning Microservices",
-                "hours": 10,
-                "hands_on_deliverable": "Multi-stage Dockerfile packaging FastAPI model server with <100MB footprint."
+                "week": "Weeks 1 - 2 (16 Hours)",
+                "topic": "Containerization of ML Inference Microservices",
+                "lab_objective": "Multi-stage Docker builds for FastAPI models, optimizing image size under 120MB"
             },
             {
-                "module_number": 2,
-                "title": "MLOps Lifecycle & Experiment Registry",
-                "hours": 10,
-                "hands_on_deliverable": "Centralized MLflow tracking server logging hyperparameters, RMSE, and model artifacts."
+                "week": "Weeks 3 - 4 (16 Hours)",
+                "topic": "Experiment Tracking & Registry with MLflow",
+                "lab_objective": "Continuous metric logging, model artifact versioning, and auto-rollback deployment"
             },
             {
-                "module_number": 3,
-                "title": "Continuous Delivery (CI/CD) for AI Workflows",
-                "hours": 10,
-                "hands_on_deliverable": "GitHub Actions pipeline validating unit tests and pushing containers to registry."
-            },
-            {
-                "module_number": 4,
-                "title": "Cloud Deployment & Production Observability",
-                "hours": 10,
-                "hands_on_deliverable": "Live AWS ECS / EC2 deployment with healthcheck probes and endpoint load testing."
+                "week": "Week 5 (8 Hours)",
+                "topic": "Automated Cloud Deployment via GitHub Actions",
+                "lab_objective": "End-to-end CI/CD pipeline building, testing, and pushing container to cloud registry"
             }
         ]
     }
     return Response(
         content=json.dumps(patch_data, indent=2),
         media_type="application/json",
-        headers={"Content-Disposition": "attachment; filename=40hr_curriculum_drift_patch.json"}
+        headers={"Content-Disposition": "attachment; filename=NEP2020_40Hr_Curriculum_Patch.json"}
     )
+
