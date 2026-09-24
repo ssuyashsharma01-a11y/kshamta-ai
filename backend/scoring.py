@@ -1,7 +1,29 @@
+﻿import networkx as nx
 from typing import Dict, List, Any
 
-class MathematicalScoringEngine:
+class RealDAGScoringEngine:
+    """
+    100% Real Graph-Theoretic Scoring Engine:
+    Uses networkx.DiGraph for prerequisite path tracing, transitive dependency debt,
+    and linear combination of claim vs AST code evidence.
+    """
     def __init__(self):
+        # 1. Build the true directed prerequisite graph
+        self.dag = nx.DiGraph()
+        
+        # Prerequisites: Parent -> Child (e.g. Python is needed for FastAPI)
+        edges = [
+            ("Python", "FastAPI"),
+            ("Python", "Deep Learning"),
+            ("Machine Learning", "Deep Learning"),
+            ("Deep Learning", "PyTorch"),
+            ("Machine Learning", "MLOps"),
+            ("Docker", "MLOps"),
+            ("Python", "Cloud/AWS")
+        ]
+        self.dag.add_edges_from(edges)
+
+        # Role Target Vector Benchmarks
         self.role_benchmarks = {
             "AI_Engineer": {
                 "Python": 0.20,
@@ -27,16 +49,20 @@ class MathematicalScoringEngine:
                 "FastAPI": 0.15
             }
         }
-        self.prerequisites = {
-            "PyTorch": ["Deep Learning", "Python"],
-            "MLOps": ["Docker", "Machine Learning"],
-            "FastAPI": ["Python"],
-            "Deep Learning": ["Machine Learning", "Python"]
-        }
+
+    def _get_ancestor_deficits(self, skill: str, candidate_claims: Dict[str, float]) -> List[str]:
+        """Graph traversal: Find all direct and indirect prerequisite gaps."""
+        if skill not in self.dag:
+            return []
+        
+        # Ancestors are all upstream prerequisite nodes in the DAG
+        ancestors = nx.ancestors(self.dag, skill)
+        missing = [parent for parent in ancestors if candidate_claims.get(parent, 0.0) < 0.40]
+        return missing
 
     def calculate_grounded_score(self, candidate_claims: Dict[str, float], code_evidence: Dict[str, Any], target_role: str = "AI_Engineer") -> Dict[str, Any]:
         role_weights = self.role_benchmarks.get(target_role, self.role_benchmarks["AI_Engineer"])
-        verified_set = set(code_evidence.get("verified_skills", []))
+        verified_skills = set(code_evidence.get("verified_skills", []))
         
         confidence_vector = {}
         attributions = []
@@ -44,37 +70,35 @@ class MathematicalScoringEngine:
 
         for skill, weight in role_weights.items():
             claim = candidate_claims.get(skill, 0.0)
-            is_code_verified = skill in verified_set
+            is_verified = skill in verified_skills
             
-            prereq_failed = False
-            missing_parents = []
-            if skill in self.prerequisites:
-                for parent in self.prerequisites[skill]:
-                    if candidate_claims.get(parent, 0.0) < 0.40:
-                        prereq_failed = True
-                        missing_parents.append(parent)
-
-            if is_code_verified:
+            # Graph-theoretic prerequisite check
+            ancestor_deficits = self._get_ancestor_deficits(skill, candidate_claims)
+            
+            if is_verified:
+                # Evidence boost: 0.3 * Claim + 0.7 * AST Grounding
                 effective_val = min(1.0, (0.3 * claim) + (0.7 * 0.95))
                 attributions.append({
                     "skill": skill,
                     "impact": f"+{round(weight * 100, 1)}%",
-                    "reason": "Deterministic AST imports & source files verified in repository."
+                    "reason": f"AST Code Verified in repo: AST import nodes and function signatures verified."
                 })
-            elif prereq_failed:
+            elif ancestor_deficits:
+                # Penalty: Prerequisite foundation missing in DAG
                 effective_val = max(0.0, claim * 0.35)
+                missing_str = ", ".join(sorted(ancestor_deficits))
                 attributions.append({
                     "skill": skill,
                     "impact": f"-{round(weight * 0.4 * 100, 1)}%",
-                    "reason": f"Prerequisite deficit: Lacks verified foundation in {', '.join(missing_parents)}."
+                    "reason": f"DAG Prerequisite Deficit: Missing foundation in [{missing_str}]."
                 })
             else:
                 effective_val = claim * 0.65
-                if claim < 0.3:
+                if claim < 0.30:
                     attributions.append({
                         "skill": skill,
                         "impact": f"-{round(weight * 0.5 * 100, 1)}%",
-                        "reason": f"Critical vacancy for {target_role.replace('_', ' ')} benchmark."
+                        "reason": f"Core Competency Gap: Below role threshold for {target_role.replace('_', ' ')}."
                     })
 
             confidence_vector[skill] = round(effective_val, 2)
@@ -87,7 +111,7 @@ class MathematicalScoringEngine:
             "readiness_score": final_score,
             "confidence_vector": confidence_vector,
             "explainability_attributions": attributions,
-            "evidence_confidence": code_evidence.get("evidence_confidence", 0.65)
+            "evidence_confidence": code_evidence.get("evidence_confidence", 0.70)
         }
 
     def calculate_readiness(self, candidate_claims: dict, target_role: str = "AI_Engineer", code_evidence: dict = None):
@@ -120,7 +144,7 @@ class MathematicalScoringEngine:
             "unlocked_capabilities": [f"Verified competency in {s}" for s in new_skills]
         }
 
-scoring = MathematicalScoringEngine()
-
-# Compatibility Aliases
-ScoringEngine = MathematicalScoringEngine
+# Aliases for clean compatibility
+MathematicalScoringEngine = RealDAGScoringEngine
+ScoringEngine = RealDAGScoringEngine
+scoring = RealDAGScoringEngine()
