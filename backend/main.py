@@ -1,3 +1,77 @@
+
+ROLE_COURSE_CATALOG = {
+    "AI_Engineer": {
+        "Docker": {
+            "title": "Containerization of ML Inference Microservices",
+            "provider": "NPTEL / IIT Kharagpur ? 16 Hours",
+            "capstone": "Multi-stage Docker builds for FastAPI models, optimizing image size under 120MB",
+            "difficulty": "Intermediate",
+            "boost": "+8.5% Readiness Boost",
+            "url": "https://nptel.ac.in"
+        },
+        "MLOps": {
+            "title": "Machine Learning in Production & Drift Tracking",
+            "provider": "DeepLearning.AI / Coursera ? 24 Hours",
+            "capstone": "Deploy MLflow Tracking Server with artifact registry and automated drift trigger",
+            "difficulty": "Advanced",
+            "boost": "+11.0% Readiness Boost",
+            "url": "https://coursera.org"
+        },
+        "PyTorch": {
+            "title": "Modular ResNet Backprop Pipelines on CUDA",
+            "provider": "Coursera / IBM Skills ? 20 Hours",
+            "capstone": "Construct and train modular ResNet backprop pipeline without high-level wrappers",
+            "difficulty": "Advanced",
+            "boost": "+12.5% Readiness Boost",
+            "url": "https://coursera.org"
+        }
+    },
+    "Backend_Systems": {
+        "Database/SQL": {
+            "title": "PostgreSQL High-Concurrency & Indexing Tuning",
+            "provider": "SWAYAM / NPTEL ? 18 Hours",
+            "capstone": "Design ACID-compliant multi-tenant schema with connection pooling & query optimization",
+            "difficulty": "Advanced",
+            "boost": "+14.0% Readiness Boost",
+            "url": "https://swayam.gov.in"
+        },
+        "Docker": {
+            "title": "Microservices Orchestration & Docker Compose",
+            "provider": "Docker Curriculum ? 12 Hours",
+            "capstone": "Build multi-container network with Redis caching, async workers, and Nginx reverse proxy",
+            "difficulty": "Intermediate",
+            "boost": "+9.5% Readiness Boost",
+            "url": "https://docker-curriculum.com"
+        },
+        "FastAPI": {
+            "title": "Production Async Microservices with Asyncpg",
+            "provider": "TestDriven.io ? 14 Hours",
+            "capstone": "Develop async REST engine with schema validation, rate-limiting, and JWT auth",
+            "difficulty": "Intermediate",
+            "boost": "+10.0% Readiness Boost",
+            "url": "https://testdriven.io"
+        }
+    },
+    "Full_Stack": {
+        "Frontend/React": {
+            "title": "Modern Reactive Web Applications & State Architecture",
+            "provider": "freeCodeCamp / FullStackOpen ? 25 Hours",
+            "capstone": "Build real-time websocket client dashboard synced with background workers",
+            "difficulty": "Intermediate",
+            "boost": "+10.5% Readiness Boost",
+            "url": "https://fullstackopen.com"
+        },
+        "Database/SQL": {
+            "title": "Relational Data Modeling & REST Integration",
+            "provider": "NPTEL / IIT Madras ? 20 Hours",
+            "capstone": "Implement relational schemas with foreign key DAG cascading and migrations",
+            "difficulty": "Intermediate",
+            "boost": "+8.0% Readiness Boost",
+            "url": "https://nptel.ac.in"
+        }
+    }
+}
+
 from fastapi import FastAPI, UploadFile, File, Form, Response
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -98,42 +172,44 @@ def get_recruiter_pool(role: str = "AI Engineer"):
     filtered.sort(key=lambda x: x["capability_score"], reverse=True)
     return filtered
 
+
 @app.post("/api/candidate/recommended-courses")
-def get_recommended_courses(req: CourseRequest):
-    skills = req.skills or {}
-    catalog = [
-        {"skill": "MLOps", "threshold": 0.45, "title": "Production MLOps & Experiment Tracking", "provider": "Coursera ? DeepLearning.AI", "boost": "+14.2% Capability", "capstone": "End-to-End ML Pipeline on GitHub Actions", "url": "https://www.coursera.org"},
-        {"skill": "Docker", "threshold": 0.50, "title": "Cloud Native Containerization for Microservices", "provider": "NPTEL ? Swayam Vocational", "boost": "+11.8% Capability", "capstone": "Multi-stage Docker Engine Deployment (<120MB)", "url": "https://nptel.ac.in"},
-        {"skill": "PyTorch", "threshold": 0.60, "title": "Deep Learning Foundation & Tensor Architectures", "provider": "edX ? IBM Professional", "boost": "+16.5% Capability", "capstone": "Custom Transformer from Scratch", "url": "https://www.edx.org"},
-        {"skill": "FastAPI", "threshold": 0.55, "title": "Production Backend Engineering with Async Python", "provider": "TestDriven.io ? Professional", "boost": "+12.0% Capability", "capstone": "Async REST API with JWT & Role-Based Auth", "url": "https://testdriven.io"},
-        {"skill": "Database/SQL", "threshold": 0.50, "title": "Relational Data Modeling & SQLAlchemy Architecture", "provider": "Swayam ? IIT Madras", "boost": "+10.5% Capability", "capstone": "PostgreSQL Schema with Indexing & Migrations", "url": "https://swayam.gov.in"},
-        {"skill": "Cloud/AWS", "threshold": 0.40, "title": "Cloud Infrastructure & Serverless Microservices", "provider": "AWS Educate ? Cloud Native", "boost": "+13.0% Capability", "capstone": "Serverless API Gateway with Terraform IaC", "url": "https://aws.amazon.com/education/awseducate/"}
-    ]
+def get_recommended_courses(req: dict = None):
+    req_data = req or {}
+    role = req_data.get("target_role", "AI_Engineer").replace(" ", "_")
+    skills = req_data.get("skills", {})
     
-    # Filter courses where candidate has a deficit
-    matched = [
-        {
-            "deficit_label": f"Deficit: {item['skill']}",
-            "course_title": item["title"],
-            "provider_info": item["provider"],
-            "readiness_boost": item["boost"],
-            "capstone_title": item["capstone"],
-            "module_url": item["url"]
-        }
-        for item in catalog if skills.get(item["skill"], 0.0) < item["threshold"]
-    ]
+    catalog = ROLE_COURSE_CATALOG.get(role, ROLE_COURSE_CATALOG["AI_Engineer"])
+    recommendations = []
     
-    # Return top 3 most critical deficits for clean dashboard rendering
-    return matched[:3] if matched else [
-        {
-            "deficit_label": "Advanced Elective",
-            "course_title": "Production Distributed Systems Architecture",
-            "provider_info": "MIT OpenCourseWare",
-            "readiness_boost": "+8.5% Capability",
-            "capstone_title": "Consensus Engine Implementation",
-            "module_url": "https://ocw.mit.edu"
-        }
-    ]
+    for skill, cat in catalog.items():
+        score = skills.get(skill, 0.0)
+        if score < 0.7:
+            recommendations.append({
+                "deficit_skill": skill,
+                "deficit_label": f"Role Deficit: {skill}",
+                "course_title": cat["title"],
+                "provider_info": cat["provider"],
+                "capstone_title": cat["capstone"],
+                "difficulty": cat["difficulty"],
+                "readiness_boost": cat["boost"],
+                "module_url": cat["url"]
+            })
+            
+    if not recommendations:
+        for skill, cat in list(catalog.items())[:2]:
+            recommendations.append({
+                "deficit_skill": skill,
+                "deficit_label": f"Target Benchmark: {skill}",
+                "course_title": cat["title"],
+                "provider_info": cat["provider"],
+                "capstone_title": cat["capstone"],
+                "difficulty": cat["difficulty"],
+                "readiness_boost": cat["boost"],
+                "module_url": cat["url"]
+            })
+            
+    return recommendations
 
 @app.get("/api/university/cohort-metrics")
 def get_cohort_metrics():
