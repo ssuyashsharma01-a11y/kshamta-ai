@@ -1,150 +1,135 @@
-﻿import networkx as nx
+﻿import os
+import pandas as pd
+import networkx as nx
 from typing import Dict, List, Any
+from sklearn.ensemble import RandomForestRegressor
 
-class RealDAGScoringEngine:
-    """
-    100% Real Graph-Theoretic Scoring Engine:
-    Uses networkx.DiGraph for prerequisite path tracing, transitive dependency debt,
-    and linear combination of claim vs AST code evidence.
-    """
+class MathematicalScoringEngine:
     def __init__(self):
-        # 1. Build the true directed prerequisite graph
         self.dag = nx.DiGraph()
-        
-        # Prerequisites: Parent -> Child (e.g. Python is needed for FastAPI)
-        edges = [
-            ("Python", "FastAPI"),
-            ("Python", "Deep Learning"),
-            ("Machine Learning", "Deep Learning"),
-            ("Deep Learning", "PyTorch"),
-            ("Machine Learning", "MLOps"),
-            ("Docker", "MLOps"),
-            ("Python", "Cloud/AWS")
-        ]
-        self.dag.add_edges_from(edges)
+        self._build_skill_dag()
 
-        # Role Target Vector Benchmarks
         self.role_benchmarks = {
             "AI_Engineer": {
                 "Python": 0.20,
-                "Machine Learning": 0.18,
-                "Deep Learning": 0.15,
+                "Machine Learning": 0.20,
+                "Deep Learning": 0.20,
                 "PyTorch": 0.15,
-                "FastAPI": 0.12,
+                "FastAPI": 0.10,
                 "Docker": 0.10,
-                "MLOps": 0.10
+                "MLOps": 0.05
             },
-            "Backend_Engineer": {
+            "Backend_Developer": {
                 "Python": 0.25,
-                "FastAPI": 0.25,
-                "Docker": 0.20,
-                "Cloud/AWS": 0.15,
-                "Database/SQL": 0.15
-            },
-            "MLOps_Engineer": {
-                "Python": 0.15,
-                "Docker": 0.25,
-                "MLOps": 0.25,
-                "Cloud/AWS": 0.20,
-                "FastAPI": 0.15
+                "FastAPI": 0.30,
+                "Database/SQL": 0.20,
+                "Docker": 0.15,
+                "Cloud/AWS": 0.10
             }
         }
 
-    def _get_ancestor_deficits(self, skill: str, candidate_claims: Dict[str, float]) -> List[str]:
-        """Graph traversal: Find all direct and indirect prerequisite gaps."""
-        if skill not in self.dag:
-            return []
-        
-        # Ancestors are all upstream prerequisite nodes in the DAG
-        ancestors = nx.ancestors(self.dag, skill)
-        missing = [parent for parent in ancestors if candidate_claims.get(parent, 0.0) < 0.40]
-        return missing
+        self.csv_path = os.path.join(os.path.dirname(__file__), "data", "training_data.csv")
+        self.rf_model = self._train_random_forest_from_csv()
 
-    def calculate_grounded_score(self, candidate_claims: Dict[str, float], code_evidence: Dict[str, Any], target_role: str = "AI_Engineer") -> Dict[str, Any]:
-        role_weights = self.role_benchmarks.get(target_role, self.role_benchmarks["AI_Engineer"])
-        verified_skills = set(code_evidence.get("verified_skills", []))
-        
-        confidence_vector = {}
+    def _build_skill_dag(self):
+        dependencies = [
+            ("Python", "Machine Learning"),
+            ("Python", "FastAPI"),
+            ("Machine Learning", "Deep Learning"),
+            ("Machine Learning", "MLOps"),
+            ("Deep Learning", "PyTorch"),
+            ("Docker", "MLOps"),
+            ("Database/SQL", "FastAPI")
+        ]
+        self.dag.add_edges_from(dependencies)
+
+    def _train_random_forest_from_csv(self) -> RandomForestRegressor:
+        if not os.path.exists(self.csv_path):
+            raise FileNotFoundError(f"Training dataset not found at {self.csv_path}")
+
+        df = pd.read_csv(self.csv_path)
+        features = ["ast_depth", "dag_fulfillment", "claim_evidence_ratio", "artifact_rigor"]
+        target = "job_readiness"
+
+        X = df[features].values
+        y = df[target].values
+
+        rf = RandomForestRegressor(n_estimators=50, random_state=42)
+        rf.fit(X, y)
+        return rf
+
+    def calculate_grounded_score(self, claims: Dict[str, float], code_evidence: Dict[str, Any], target_role: str = "AI_Engineer") -> Dict[str, Any]:
+        role_key = target_role.replace(" ", "_")
+        weights = self.role_benchmarks.get(role_key, self.role_benchmarks["AI_Engineer"])
+        ast_verified = set(code_evidence.get("ast_verified_skills", []))
+
         attributions = []
-        raw_score = 0.0
+        verified_count = 0
+        total_prereq_penalties = 0.0
 
-        for skill, weight in role_weights.items():
-            claim = candidate_claims.get(skill, 0.0)
-            is_verified = skill in verified_skills
-            
-            # Graph-theoretic prerequisite check
-            ancestor_deficits = self._get_ancestor_deficits(skill, candidate_claims)
-            
-            if is_verified:
-                # Evidence boost: 0.3 * Claim + 0.7 * AST Grounding
-                effective_val = min(1.0, (0.3 * claim) + (0.7 * 0.95))
+        for skill, weight in weights.items():
+            claim_val = claims.get(skill, 0.0)
+
+            # Check DAG dependencies
+            ancestors = nx.ancestors(self.dag, skill) if self.dag.has_node(skill) else set()
+            missing_prereqs = [anc for anc in ancestors if claims.get(anc, 0.0) < 0.30 or anc not in ast_verified]
+
+            # Trigger prerequisite penalty if claimed without verified foundation
+            if missing_prereqs and claim_val > 0.30:
+                penalty = min(0.35, len(missing_prereqs) * 0.15)
+                total_prereq_penalties += penalty
                 attributions.append({
                     "skill": skill,
-                    "impact": f"+{round(weight * 100, 1)}%",
-                    "reason": f"AST Code Verified in repo: AST import nodes and function signatures verified."
+                    "impact": f"-{round(penalty * 100, 1)}%",
+                    "reason": f"DAG Prerequisite Deficit: Claimed without verified foundation in {sorted(list(missing_prereqs))}."
                 })
-            elif ancestor_deficits:
-                # Penalty: Prerequisite foundation missing in DAG
-                effective_val = max(0.0, claim * 0.35)
-                missing_str = ", ".join(sorted(ancestor_deficits))
+            elif skill in ast_verified and claim_val > 0.0:
+                verified_count += 1
+                boost = weight * 1.15
                 attributions.append({
                     "skill": skill,
-                    "impact": f"-{round(weight * 0.4 * 100, 1)}%",
-                    "reason": f"DAG Prerequisite Deficit: Missing foundation in [{missing_str}]."
+                    "impact": f"+{round(boost * 100, 1)}%",
+                    "reason": "AST Code Verified: Active behavioral AST calls and decorator nodes confirmed."
                 })
-            else:
-                effective_val = claim * 0.65
-                if claim < 0.30:
-                    attributions.append({
-                        "skill": skill,
-                        "impact": f"-{round(weight * 0.5 * 100, 1)}%",
-                        "reason": f"Core Competency Gap: Below role threshold for {target_role.replace('_', ' ')}."
-                    })
+            elif claim_val > 0.0:
+                attributions.append({
+                    "skill": skill,
+                    "impact": "-10.0%",
+                    "reason": "Unverified Claim: Stated in resume but zero behavioral AST proof in repository."
+                })
 
-            confidence_vector[skill] = round(effective_val, 2)
-            raw_score += effective_val * weight
+        # Calculate empirical feature vectors for Random Forest Regressor
+        ast_depth_score = min(1.0, (verified_count / max(1, len(ast_verified))) * 0.95) if ast_verified else 0.05
+        dag_fulfillment = max(0.05, 1.0 - (total_prereq_penalties / 2.0))
+        active_claims = len([v for v in claims.values() if v > 0.1])
+        claim_ratio = min(1.0, verified_count / max(1, active_claims)) if active_claims > 0 else 0.05
 
-        final_score = round(min(100.0, raw_score * 100), 1)
+        # Check for production testing & structure artifacts
+        artifacts = code_evidence.get("code_artifacts", [])
+        has_tests = any("test" in str(a).lower() for a in artifacts)
+        has_docker = any("docker" in str(a).lower() for a in artifacts)
+        artifact_flag = 1.0 if (has_tests and has_docker) else (0.5 if artifacts else 0.0)
 
-        return {
-            "target_role": target_role,
-            "readiness_score": final_score,
-            "confidence_vector": confidence_vector,
-            "explainability_attributions": attributions,
-            "evidence_confidence": code_evidence.get("evidence_confidence", 0.70)
+        features = [[ast_depth_score, dag_fulfillment, claim_ratio, artifact_flag]]
+        rf_prediction = float(self.rf_model.predict(features)[0])
+        final_readiness_pct = round(min(100.0, rf_prediction * 100), 1)
+
+        feature_importance_map = {
+            "AST Behavioral Code Depth": round(float(self.rf_model.feature_importances_[0]), 3),
+            "DAG Prerequisite Fulfillment": round(float(self.rf_model.feature_importances_[1]), 3),
+            "Claimed-to-Evidence Ratio": round(float(self.rf_model.feature_importances_[2]), 3),
+            "Repository Artifact Rigor": round(float(self.rf_model.feature_importances_[3]), 3)
         }
 
-    def calculate_readiness(self, candidate_claims: dict, target_role: str = "AI_Engineer", code_evidence: dict = None):
-        if not code_evidence:
-            code_evidence = {
-                "verified_skills": [s for s, v in candidate_claims.items() if v >= 0.7 and s in ["Python", "FastAPI"]],
-                "evidence_confidence": 0.75
-            }
-        return self.calculate_grounded_score(candidate_claims, code_evidence, target_role)
-
-    def simulate_what_if(self, current_skills: dict, target_role: str, new_skills: list):
-        simulated_claims = dict(current_skills)
-        for s in new_skills:
-            simulated_claims[s] = max(simulated_claims.get(s, 0.0), 0.88)
-
-        base_evidence = {"verified_skills": [s for s, v in current_skills.items() if v >= 0.7]}
-        sim_evidence = {"verified_skills": list(set(base_evidence["verified_skills"] + new_skills))}
-
-        base_res = self.calculate_grounded_score(current_skills, base_evidence, target_role)
-        sim_res = self.calculate_grounded_score(simulated_claims, sim_evidence, target_role)
-
-        cur = base_res["readiness_score"]
-        proj = sim_res["readiness_score"]
-        delta = round(max(0.0, proj - cur), 1)
-
         return {
-            "current_score": cur,
-            "projected_score": proj,
-            "delta_jump": delta,
-            "unlocked_capabilities": [f"Verified competency in {s}" for s in new_skills]
+            "readiness_score": final_readiness_pct,
+            "ml_model_used": "Scikit-Learn Random Forest (Trained on training_data.csv)",
+            "ml_feature_importances": feature_importance_map,
+            "penalty_status": "DAG Prerequisite Audit: Verified" if total_prereq_penalties == 0 else "DAG Prerequisite Deficit Identified",
+            "attributions": attributions,
+            "verified_skills_count": verified_count,
+            "target_role": target_role
         }
 
-# Aliases for clean compatibility
-MathematicalScoringEngine = RealDAGScoringEngine
-ScoringEngine = RealDAGScoringEngine
-scoring = RealDAGScoringEngine()
+ScoringEngine = MathematicalScoringEngine
+scoring = MathematicalScoringEngine()
