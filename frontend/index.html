@@ -248,6 +248,12 @@
   <script>
     let radarChartInstance = null;
 
+    // Use Render backend in production, localhost in development
+    const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? ""
+      : "https://talentos-kshamta-ai.onrender.com"; // <-- apna Render URL yahan aayega
+
+
     
     function simulateUnverifiedAudit() {
       document.getElementById('github-url').value = 'https://github.com/unverified-demo/empty-repo';
@@ -310,7 +316,7 @@
       formData.append('target_role', targetRole);
 
       try {
-        const res = await fetch('/api/candidate/audit-full', { method: 'POST', body: formData });
+        const res = await fetch(`${API_BASE}/api/candidate/audit-full', { method: 'POST', body: formData });
         const data = await res.json();
         renderAuditData(data);
       } catch (err) {
@@ -433,7 +439,7 @@
 
     async function fetchRecommendedCourses(skills) {
       try {
-        const res = await fetch('/api/candidate/recommended-courses', {
+        const res = await fetch(`${API_BASE}/api/candidate/recommended-courses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ skills })
@@ -464,7 +470,7 @@
 
     async function fetchRecruiterPool(role) {
       try {
-        const res = await fetch(`/api/recruiter/talent-pool?role=${encodeURIComponent(role)}`);
+        const res = await fetch(`${API_BASE}/api/recruiter/talent-pool?role=${encodeURIComponent(role)}`);
         const pool = await res.json();
         const tbody = document.getElementById('recruiter-table-body');
         tbody.innerHTML = '';
@@ -497,7 +503,7 @@
 
     async function exportAuditPDF() {
       try {
-        const res = await fetch('/api/candidate/export-report-pdf', {
+        const res = await fetch(`${API_BASE}/api/candidate/export-report-pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -523,7 +529,7 @@
 
     async function downloadCurriculumPatch() {
       try {
-        const res = await fetch('/api/university/export-syllabus-patch');
+        const res = await fetch(`${API_BASE}/api/university/export-syllabus-patch');
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
