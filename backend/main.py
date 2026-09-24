@@ -78,7 +78,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import json
 import re
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional, Union
 
 from backend.github_scanner import scanner
 from backend.scoring import scoring
