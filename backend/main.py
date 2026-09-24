@@ -130,7 +130,7 @@ def simulate_skill_gain(req: SimulateRequest):
 
 @app.post("/api/candidate/recommended-courses")
 def get_recommended_courses(req: dict = None):
-    skills = (req or {}).wiet("skills", {})
+    skills = (req or {}).get("skills", {})
     deficits = []
     for(s) in ["Docker", "MLOps", "Cloud/AWS", "PyTorch", "Deep Learning"]:
         score = skills.get(s, 0.0)
@@ -195,6 +195,21 @@ def get_recruiter_talent_pool(role: str = "AI Engineer"):
         })
     ranked_pool.sort(key=lambda x: x["capability_score"], reverse=True)
     return ranked_pool
+
+@app.get("/api/university/cohort-metrics")
+def get_cohort_metrics():
+    return {
+        "status": "success",
+        "cohort_name": "B.E. CSE / AIML Batch 2026",
+        "total_students": 140,
+        "audited_students": 140,
+        "average_readiness": 64.8,
+        "deficits": {
+            "MLOps & Tracking": {"percentage": 86, "impact": "Critical"},
+            "Docker & Containerization": {"percentage": 78, "impact": "High"},
+            "Cloud Infrastructure": {"percentage": 62, "impact": "Moderate"}
+        }
+    }
 
 @app.get("/api/university/export-syllabus-patch")
 def export_syllabus_patch():
